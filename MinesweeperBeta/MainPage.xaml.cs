@@ -22,9 +22,30 @@ namespace MinesweeperBeta
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        List<Button> cells = new List<Button>();
+
         public MainPage()
         {
             this.InitializeComponent();
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    Button button = new Button
+                    {
+                        Content = "Button1",
+                        HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
+                        VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,
+                    };
+
+                    PlayingField.Children.Add(button);
+                    Grid.SetRow(button, i);
+                    Grid.SetColumn(button, j);
+
+                    cells.Add(button);
+                }
+            }
         }
     }
 }
