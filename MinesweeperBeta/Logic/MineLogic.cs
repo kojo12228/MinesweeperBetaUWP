@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MinesweeperBeta.Logic
 {
@@ -10,8 +7,8 @@ namespace MinesweeperBeta.Logic
     {
         public int BombQuantity { get; private set; }
         public int VisitedCells { get; private set; }
-        public int GridWidth { get; private set; }
-        public int GridHeight { get; private set; }
+        public int Rows { get; private set; }
+        public int Columns { get; private set; }
 
         public int FlagsAvailable { get; private set; }
 
@@ -51,11 +48,11 @@ namespace MinesweeperBeta.Logic
         {
             this.BombQuantity = bombQuantity;
             this.FlagsAvailable = bombQuantity;
-            this.GridWidth = rows;
-            this.GridHeight = columns;
+            this.Rows = rows;
+            this.Columns = columns;
 
             //Cannot proceed if there are meant to be more bombs than cells
-            if (bombQuantity > (GridHeight * GridWidth)) throw new Exception();
+            if (bombQuantity > (Columns * Rows)) throw new Exception();
 
             StartNewGame();
         }
@@ -65,8 +62,8 @@ namespace MinesweeperBeta.Logic
         /// </summary>
         public void StartNewGame()
         {
-            BombsAndValues = new int[GridWidth, GridHeight];
-            VisitedPoints = new int[GridWidth, GridHeight];
+            BombsAndValues = new int[Rows, Columns];
+            VisitedPoints = new int[Rows, Columns];
             FlagsAvailable = BombQuantity;
             VisitedCells = 0;
 
@@ -75,15 +72,15 @@ namespace MinesweeperBeta.Logic
             var bombs = new List<int>();
             while (bombs.Count < BombQuantity)
             {
-                int proposedBombLocation = bombRandom.Next(0, GridWidth * GridHeight);
+                int proposedBombLocation = bombRandom.Next(0, Rows * Columns);
                 if (!bombs.Contains(proposedBombLocation))
                     bombs.Add(proposedBombLocation);
             }
 
             foreach (int bombLocation in bombs)
             {
-                int bombX = bombLocation / GridWidth;
-                int bombY = bombLocation % GridHeight;
+                int bombX = bombLocation / Rows;
+                int bombY = bombLocation % Rows;
 
                 BombsAndValues[bombX, bombY] = -1;
 
@@ -94,8 +91,8 @@ namespace MinesweeperBeta.Logic
                         int positionX = bombX + x - 1;
                         int positionY = bombY + y - 1;
                         //Values must be in grid range (0 or gridWidth/Height cause issues)
-                        if (positionX <= GridWidth - 1 &&
-                            positionY <= GridHeight - 1 &&
+                        if (positionX <= Rows - 1 &&
+                            positionY <= Columns - 1 &&
                             positionX >= 0 && positionY >= 0)
                         {
                             //For all cells adjacent to a bomb that are not bombs,
@@ -188,7 +185,7 @@ namespace MinesweeperBeta.Logic
                 {
                     int cellX = row + x;
                     int cellY = column + y;
-                    if (cellX >= 0 && cellX < GridWidth && cellY >= 0 && cellY < GridHeight)
+                    if (cellX >= 0 && cellX < Rows && cellY >= 0 && cellY < Columns)
                     {
                         //Only call method on unvisited cells
                         if (VisitedPoints[cellX, cellY] == 0) VisitNearbyPoints(row + x, column + y);
@@ -206,7 +203,7 @@ namespace MinesweeperBeta.Logic
         /// </returns>
         public bool Success()
         {
-            return (GridWidth * GridHeight) == BombQuantity + VisitedCells;
+            return (Rows * Columns) == BombQuantity + VisitedCells;
         }
 
         /// <summary>
@@ -214,9 +211,9 @@ namespace MinesweeperBeta.Logic
         /// </summary>
         public void RevealBombs()
         {
-            for (int x = 0; x < GridWidth; x++)
+            for (int x = 0; x < Rows; x++)
             {
-                for (int y = 0; y < GridHeight; y++)
+                for (int y = 0; y < Columns; y++)
                 {
                     if (BombsAndValues[x, y] == -1) VisitedPoints[x, y] = 1;
                 }
