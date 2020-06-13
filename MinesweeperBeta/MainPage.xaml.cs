@@ -228,7 +228,6 @@ namespace MinesweeperBeta
                             }
                             //Disable cells that are visited
                             cells[i, j].IsEnabled = false;
-                            cells[i, j].BorderBrush = new RevealBackgroundBrush();
                             break;
                         case 0:
                             //Mathematic asterix
@@ -238,6 +237,10 @@ namespace MinesweeperBeta
                         case -1:
                             //Flag symbol
                             cells[i, j].Content = "\u2691";
+                            cells[i, j].BorderBrush = new RevealBackgroundBrush
+                            {
+                                Color = Color.FromArgb(255, 255, 255, 0)
+                            };
                             break;
                     }
                 }
