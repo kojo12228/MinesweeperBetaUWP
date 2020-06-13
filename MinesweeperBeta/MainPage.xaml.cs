@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using MinesweeperBeta.Logic;
+using Windows.UI;
 
 namespace MinesweeperBeta
 {
@@ -24,15 +25,22 @@ namespace MinesweeperBeta
         /// <summary>
         /// Fixed number of rows on playing field.
         /// </summary>
-        private const int gameRows = 12;
+        private const int gameRows = 20;
         /// <summary>
         /// Fixed number of columns on the playing field.
         /// </summary>
-        private const int gameColumns = 12;
+        private const int gameColumns = 20;
         /// <summary>
         /// Fixed number of bombs used in the game.
         /// </summary>
         private const int gameBombs = 20;
+        /// <summary>
+        /// Whether the player has yet to visit a cell in a game.
+        /// </summary>
+        /// <remarks>
+        /// Should be reset to true after a new game and set to false after a cell is visited.
+        /// </remarks>
+        private bool firstMove = true;
 
         /// <summary>
         /// Matrix of cells represented by buttons on the field.
@@ -124,7 +132,7 @@ namespace MinesweeperBeta
             game.ToggleFlag(b.x, b.y);
             UpdateCells();
             UpdateFlagsTextBlock();
-            CheckIfWon();
+            if (!firstMove) CheckIfWon();
         }
 
         /// <summary>
@@ -143,6 +151,17 @@ namespace MinesweeperBeta
 
             //If cell flagged, do nothing
             if (game.VisitedPoints[b.x, b.y] == -1) return;
+
+            //If cell not flagged, but no other moves made
+            //generate bombs so that the user cannot activate
+            //bomb on first move.
+            if (firstMove)
+            {
+                firstMove = false;
+                game.GenerateBombs(b.x, b.y);
+                UpdateCells();
+                return;
+            }
 
             bool notLost = game.SelectPoint(b.x, b.y);
 
@@ -165,7 +184,7 @@ namespace MinesweeperBeta
                 switch (dialogReturn)
                 {
                     case ContentDialogResult.Primary: //Restart button
-                        game.StartNewGame();
+                        game.ResetBoard();
                         UpdateCells();
                         foreach (CellButton cb in cells) cb.IsEnabled = true;
                         break;
@@ -212,6 +231,7 @@ namespace MinesweeperBeta
                         case 0:
                             //Mathematic asterix
                             cells[i, j].Content = "\u2217";
+                            cells[i, j].IsEnabled = true;
                             break;
                         case -1:
                             //Flag symbol
@@ -240,7 +260,8 @@ namespace MinesweeperBeta
                 switch (dialogReturn)
                 {
                     case ContentDialogResult.Primary:
-                        game.StartNewGame();
+                        firstMove = true;
+                        game.ResetBoard();
                         UpdateCells();
                         break;
                     case ContentDialogResult.Secondary:

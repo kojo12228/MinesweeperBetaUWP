@@ -54,27 +54,48 @@ namespace MinesweeperBeta.Logic
             //Cannot proceed if there are meant to be more bombs than cells
             if (bombQuantity > (Columns * Rows)) throw new Exception();
 
-            StartNewGame();
+            //StartNewGame();
+            ResetBoard();
         }
-        
+
         /// <summary>
-        /// Method resets board (all cells unvisited) and new bombs.
+        /// Generate new blank arrays for bombs and visited points.
+        /// Should be followed with aq call to GenerateBombs.
         /// </summary>
-        public void StartNewGame()
+        public void ResetBoard()
         {
             BombsAndValues = new int[Rows, Columns];
             VisitedPoints = new int[Rows, Columns];
             FlagsAvailable = BombQuantity;
             VisitedCells = 0;
+        }
 
+        /// <summary>
+        /// Generate the positions of bombs on the board so that
+        /// the initial selection will never be a bomb. Reveal
+        /// neighbouring tiles as usual.
+        /// </summary>
+        /// <param name="initX">First visit X position.</param>
+        /// <param name="initY">First visit Y position.</param>
+        public void GenerateBombs(int initX, int initY)
+        {
             Random bombRandom = new Random();
 
             var bombs = new List<int>();
             while (bombs.Count < BombQuantity)
             {
                 int proposedBombLocation = bombRandom.Next(0, Rows * Columns);
-                if (!bombs.Contains(proposedBombLocation))
+                var notYetAddedBomb = !bombs.Contains(proposedBombLocation);
+
+                //Proposed bomb cannot be the X and Y coordinate of first click.
+                var notPositionOfFirstClick =
+                    !(proposedBombLocation / Rows == initX &&
+                      proposedBombLocation % Rows == initY);
+
+                if (notYetAddedBomb && notPositionOfFirstClick)
+                {
                     bombs.Add(proposedBombLocation);
+                }
             }
 
             foreach (int bombLocation in bombs)
@@ -103,6 +124,8 @@ namespace MinesweeperBeta.Logic
                     }
                 }
             }
+
+            VisitNearbyPoints(initX, initY);
         }
 
         /// <summary>
