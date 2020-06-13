@@ -184,6 +184,7 @@ namespace MinesweeperBeta
                 switch (dialogReturn)
                 {
                     case ContentDialogResult.Primary: //Restart button
+                        firstMove = true;
                         game.ResetBoard();
                         UpdateCells();
                         foreach (CellButton cb in cells) cb.IsEnabled = true;
@@ -227,6 +228,7 @@ namespace MinesweeperBeta
                             }
                             //Disable cells that are visited
                             cells[i, j].IsEnabled = false;
+                            cells[i, j].BorderBrush = new RevealBackgroundBrush();
                             break;
                         case 0:
                             //Mathematic asterix
