@@ -14,6 +14,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using MinesweeperBeta.Logic;
 using Windows.UI;
+using System.Collections.ObjectModel;
+using System.Security.Cryptography;
 
 namespace MinesweeperBeta
 {
@@ -22,18 +24,7 @@ namespace MinesweeperBeta
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        /// <summary>
-        /// Fixed number of rows on playing field.
-        /// </summary>
-        private const int gameRows = 15;
-        /// <summary>
-        /// Fixed number of columns on the playing field.
-        /// </summary>
-        private const int gameColumns = 15;
-        /// <summary>
-        /// Fixed number of bombs used in the game.
-        /// </summary>
-        private const int gameBombs = 20;
+        private GameComplexity prevGameComplexity;
         /// <summary>
         /// Whether the player has yet to visit a cell in a game.
         /// </summary>
@@ -43,11 +34,11 @@ namespace MinesweeperBeta
         private bool firstMove = true;
 
         /// <summary>
-        /// 
+        /// Timer to tick every millisecond.
         /// </summary>
         private DispatcherTimer Timer = new DispatcherTimer();
         /// <summary>
-        /// 
+        /// DateTime of the start of the current game.
         /// </summary>
         private DateTime gameStartTime;
 
@@ -58,7 +49,11 @@ namespace MinesweeperBeta
         /// <summary>
         /// Underlying logic of the game using <see cref="GameGrid"/>.
         /// </summary>
-        private GameGrid game = new GameGrid(gameRows, gameColumns, gameBombs);
+        private GameGrid game;
+        /// <summary>
+        /// Complexity options available to the user.
+        /// </summary>
+        ObservableCollection<GameComplexity> complexityOptions = new ObservableCollection<GameComplexity>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainPage"/> class.
@@ -69,28 +64,132 @@ namespace MinesweeperBeta
 
             PlayingField_ViewBox.Stretch = Stretch.Uniform;
 
-            cells = new Button[gameRows, gameColumns];
+            InitialiseComplexityOptions();
+            RestorePlayingField();
+            
+            Timer.Tick += Timer_Tick;
+            Timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
+            gameStartTime = DateTime.Now;
+            Timer.Start();
+
+        }
+
+        private void InitialiseComplexityOptions()
+        {
+            const int defaultComplexity = 1;
+
+            complexityOptions.Add(new GameComplexity
+            {
+                Rows = 10,
+                Columns = 10,
+                Bombs = 5,
+                ComplexityName = "Easy"
+            });
+            complexityOptions.Add(new GameComplexity
+            {
+                Rows = 13,
+                Columns = 13,
+                Bombs = 20,
+                ComplexityName = "Moderate"
+            });
+            complexityOptions.Add(new GameComplexity
+            {
+                Rows = 15,
+                Columns = 15,
+                Bombs = 40,
+                ComplexityName = "Hard"
+            });
+            complexityOptions.Add(new GameComplexity
+            {
+                Rows = 15,
+                Columns = 15,
+                Bombs = 60,
+                ComplexityName = "Pro"
+            });
+
+            prevGameComplexity = complexityOptions[defaultComplexity];
+            game = new GameGrid(prevGameComplexity.Rows, prevGameComplexity.Columns, prevGameComplexity.Bombs);
+            NewGameCmplx_Combo.SelectedIndex = defaultComplexity;
+        }
+
+        /// <summary>
+        /// Checks the user has set a new complexity.
+        /// </summary>
+        /// <returns>
+        /// True if new complexity is set, false otherwise. A new game grid
+        /// is generated and the visual playing field is reset.
+        /// </returns>
+        private bool ReevalGameComplexity()
+        {
+            var complexity = NewGameCmplx_Combo.SelectedItem as GameComplexity;
+            if (complexity != prevGameComplexity)
+            {
+                prevGameComplexity = complexity;
+                game = new GameGrid(complexity.Rows, complexity.Columns, complexity.Bombs);
+                ClearPlayingField();
+                RestorePlayingField();
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Reset displayed board and internal board for a new game.
+        /// </summary>
+        private void StartNewGame()
+        {
+            var gameComplexityChanged = ReevalGameComplexity();
+            firstMove = true;
+            if (!gameComplexityChanged)
+            {
+                game.ResetBoard();
+                UpdateCells();
+                UpdateFlagsTextBlock();
+                foreach (CellButton cb in cells) cb.IsEnabled = true;
+            }
+
+            Timer.Start();
+            gameStartTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// Removes all elements from the visual playing field.
+        /// </summary>
+        private void ClearPlayingField()
+        {
+            PlayingField.RowDefinitions.Clear();
+            PlayingField.ColumnDefinitions.Clear();
+            PlayingField.Children.Clear();
+        }
+
+        /// <summary>
+        /// Formats the <code>PlayingField</code> with the set number
+        /// of rows and columns of buttons, depending on the game.
+        /// </summary>
+        private void RestorePlayingField()
+        {
+            cells = new Button[game.Rows, game.Columns];
 
             //Adds one row definition per gameRow and column definition
             //per gameColumn
-            for (int i = 0; i < gameRows; i++)
+            for (int i = 0; i < game.Rows; i++)
             {
                 PlayingField.RowDefinitions.Add(new RowDefinition());
             }
-            for (int j = 0; j < gameColumns; j++)
+            for (int j = 0; j < game.Columns; j++)
             {
                 PlayingField.ColumnDefinitions.Add(new ColumnDefinition());
             }
 
-            for (int i = 0; i < gameRows; i++)
+            for (int i = 0; i < game.Rows; i++)
             {
-                for (int j = 0; j < gameColumns; j++)
+                for (int j = 0; j < game.Columns; j++)
                 {
                     //Each button uses ButtonRevealStyle, has margin 4 all
                     //around and stretches to fill the grid spot it is in
                     CellButton button = new CellButton
                     {
-                        Margin = new Windows.UI.Xaml.Thickness(4.0),
+                        Margin = new Thickness(4.0),
                         HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
                         VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,
                     };
@@ -109,31 +208,10 @@ namespace MinesweeperBeta
                 }
             }
 
-            Bombs_TextBlock.Text = "Bombs: " + gameBombs;
+            Bombs_TextBlock.Text = "Bombs: " + game.BombQuantity;
             UpdateFlagsTextBlock();
 
             UpdateCells();
-            
-            //
-            Timer.Tick += Timer_Tick;
-            Timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
-            gameStartTime = DateTime.Now;
-            Timer.Start();
-
-        }
-
-        /// <summary>
-        /// Reset displayed board and internal board for a new game.
-        /// </summary>
-        private void StartNewGame()
-        {
-            firstMove = true;
-            game.ResetBoard();
-            UpdateCells();
-            foreach (CellButton cb in cells) cb.IsEnabled = true;
-
-            Timer.Start();
-            gameStartTime = DateTime.Now;
         }
 
         /// <summary>
@@ -236,6 +314,12 @@ namespace MinesweeperBeta
             else CheckIfWon();
         }
 
+        /// <summary>
+        /// Update time displayed with the difference of the game
+        /// start time and the current time in seconds.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Timer_Tick(object sender, object e)
         {
             var timeDiff = DateTime.Now - gameStartTime;
@@ -247,9 +331,9 @@ namespace MinesweeperBeta
         /// </summary>
         private void UpdateCells()
         {
-            for (int i = 0; i < gameRows; i++)
+            for (int i = 0; i < game.Rows; i++)
             {
-                for (int j = 0; j < gameColumns; j++)
+                for (int j = 0; j < game.Columns; j++)
                 {
                     int cellVisitState = game.VisitedPoints[i, j];
                     int cellValue = game.BombsAndValues[i, j];
@@ -328,6 +412,18 @@ namespace MinesweeperBeta
         {
             public int x;
             public int y;
+        }
+
+        private class GameComplexity
+        {
+            public int Rows;
+            public int Columns;
+            public int Bombs;
+            public string ComplexityName;
+            public override string ToString()
+            {
+                return String.Format("{0}: {1} x {2} ({3} Bombs", ComplexityName, Rows, Columns, Bombs);
+            }
         }
     }
 }
