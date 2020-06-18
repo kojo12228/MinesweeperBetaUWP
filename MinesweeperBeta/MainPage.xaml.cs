@@ -25,11 +25,11 @@ namespace MinesweeperBeta
         /// <summary>
         /// Fixed number of rows on playing field.
         /// </summary>
-        private const int gameRows = 20;
+        private const int gameRows = 10;
         /// <summary>
         /// Fixed number of columns on the playing field.
         /// </summary>
-        private const int gameColumns = 20;
+        private const int gameColumns = 10;
         /// <summary>
         /// Fixed number of bombs used in the game.
         /// </summary>
@@ -57,6 +57,8 @@ namespace MinesweeperBeta
         public MainPage()
         {
             this.InitializeComponent();
+
+            PlayingField_ViewBox.Stretch = Stretch.Uniform;
 
             cells = new Button[gameRows, gameColumns];
 
@@ -233,6 +235,7 @@ namespace MinesweeperBeta
                             //Mathematic asterix
                             cells[i, j].Content = "\u2217";
                             cells[i, j].IsEnabled = true;
+                            cells[i, j].BorderBrush = new RevealBackgroundBrush();
                             break;
                         case -1:
                             //Flag symbol

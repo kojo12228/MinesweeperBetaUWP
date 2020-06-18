@@ -33,20 +33,27 @@
             <TextBlock Text="Minesweeper Beta"
                        Style="{StaticResource HeaderTextBlockStyle}"
                        TextAlignment="Center"/>
-            <Grid Name="PlayingField"
-                  Grid.Row="1"/>
+            <Viewbox Grid.Row="1" Name="PlayingField_ViewBox">
+                <Grid Name="PlayingField" />
+            </Viewbox>
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
                     <ColumnDefinition />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <TextBlock Name="Bombs_TextBlock"
                            Style="{StaticResource BaseTextBlockStyle}"
-                           TextAlignment="Center"/>
+                           TextAlignment="Center" VerticalAlignment="Center"/>
                 <TextBlock Name="Flags_TextBlock"
                            Style="{StaticResource BaseTextBlockStyle}"
                            Grid.Column="1"
-                           TextAlignment="Center"/>
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <Grid Grid.Column="2">
+                    <Button Name="NewGame_Button" HorizontalAlignment="Center">
+                        New Game
+                    </Button>
+                </Grid>
             </Grid>
         </Grid>
         
