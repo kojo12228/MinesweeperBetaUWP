@@ -43,6 +43,15 @@ namespace MinesweeperBeta
         private bool firstMove = true;
 
         /// <summary>
+        /// 
+        /// </summary>
+        private DispatcherTimer Timer = new DispatcherTimer();
+        /// <summary>
+        /// 
+        /// </summary>
+        private DateTime gameStartTime;
+
+        /// <summary>
         /// Matrix of cells represented by buttons on the field.
         /// </summary>
         private Button[,] cells;
@@ -104,10 +113,17 @@ namespace MinesweeperBeta
             UpdateFlagsTextBlock();
 
             UpdateCells();
+            
+            //
+            Timer.Tick += Timer_Tick;
+            Timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
+            gameStartTime = DateTime.Now;
+            Timer.Start();
+
         }
 
         /// <summary>
-        /// 
+        /// Reset displayed board and internal board for a new game.
         /// </summary>
         private void StartNewGame()
         {
@@ -115,10 +131,13 @@ namespace MinesweeperBeta
             game.ResetBoard();
             UpdateCells();
             foreach (CellButton cb in cells) cb.IsEnabled = true;
+
+            Timer.Start();
+            gameStartTime = DateTime.Now;
         }
 
         /// <summary>
-        /// 
+        /// Initiates new game process after button click.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -201,6 +220,7 @@ namespace MinesweeperBeta
             //and allow the user to restart or close the dialog
             if (!notLost)
             {
+                Timer.Stop();
                 game.RevealBombs();
                 UpdateCells();
                 var dialogReturn = await lostDialog.ShowAsync();
@@ -214,6 +234,12 @@ namespace MinesweeperBeta
                 }
             }
             else CheckIfWon();
+        }
+
+        private void Timer_Tick(object sender, object e)
+        {
+            var timeDiff = DateTime.Now - gameStartTime;
+            Time.Text = String.Format("{0:#,0.00}", timeDiff.TotalSeconds);
         }
 
         /// <summary>
@@ -275,6 +301,7 @@ namespace MinesweeperBeta
         {
             if (game.Success())
             {
+                Timer.Stop();
                 var wonDialog = new ContentDialog
                 {
                     Title = "Game Won",
