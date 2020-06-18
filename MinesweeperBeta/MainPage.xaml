@@ -13,7 +13,7 @@
         <Style TargetType="Button" BasedOn="{StaticResource ButtonRevealStyle}" />
     </Page.Resources>
 
-    <Grid Background="{ThemeResource SystemControlAcrylicWindowBrush}">
+    <Grid Background="{ThemeResource SystemControlChromeHighAcrylicWindowMediumBrush}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -26,13 +26,23 @@
                        Style="{StaticResource HeaderTextBlockStyle}"
                        TextAlignment="Center"/>
 
-            <Grid Grid.Row="1" Margin="10"
-                  Background="{ThemeResource SystemControlAccentDark1AcrylicWindowAccentDark1Brush}">
-                <Viewbox Name="PlayingField_ViewBox">
-                    <controls:UniformGrid Name="PlayingField" Margin="10,10"/>
-                </Viewbox>
-            </Grid>
-            
+            <controls:DropShadowPanel BlurRadius="16"
+                                  ShadowOpacity="1"
+                                  OffsetX="10"
+                                  OffsetY="16"
+                                  Color="Black"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center"
+                                  IsMasked="True"
+                                  Grid.Row="1">
+                <Grid Margin="10"
+                  Background="{ThemeResource SystemAccentColorDark1}">
+                    <Viewbox Name="PlayingField_ViewBox">
+                        <controls:UniformGrid Name="PlayingField" Margin="10,10"/>
+                    </Viewbox>
+                </Grid>
+            </controls:DropShadowPanel>
+
             <Grid Grid.Row="2" Margin="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
