@@ -25,11 +25,11 @@ namespace MinesweeperBeta
         /// <summary>
         /// Fixed number of rows on playing field.
         /// </summary>
-        private const int gameRows = 10;
+        private const int gameRows = 15;
         /// <summary>
         /// Fixed number of columns on the playing field.
         /// </summary>
-        private const int gameColumns = 10;
+        private const int gameColumns = 15;
         /// <summary>
         /// Fixed number of bombs used in the game.
         /// </summary>
@@ -104,6 +104,27 @@ namespace MinesweeperBeta
             UpdateFlagsTextBlock();
 
             UpdateCells();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StartNewGame()
+        {
+            firstMove = true;
+            game.ResetBoard();
+            UpdateCells();
+            foreach (CellButton cb in cells) cb.IsEnabled = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NewGameClick(Object sender, RoutedEventArgs e)
+        {
+            StartNewGame();
         }
 
         /// <summary>
@@ -186,10 +207,7 @@ namespace MinesweeperBeta
                 switch (dialogReturn)
                 {
                     case ContentDialogResult.Primary: //Restart button
-                        firstMove = true;
-                        game.ResetBoard();
-                        UpdateCells();
-                        foreach (CellButton cb in cells) cb.IsEnabled = true;
+                        StartNewGame();
                         break;
                     case ContentDialogResult.Secondary: //Close button
                         break;
@@ -268,9 +286,7 @@ namespace MinesweeperBeta
                 switch (dialogReturn)
                 {
                     case ContentDialogResult.Primary:
-                        firstMove = true;
-                        game.ResetBoard();
-                        UpdateCells();
+                        StartNewGame();
                         break;
                     case ContentDialogResult.Secondary:
                         break;
