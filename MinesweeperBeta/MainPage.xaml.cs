@@ -1,4 +1,6 @@
-﻿using System;
+﻿
+using MinesweeperBeta.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,7 +17,6 @@ using Windows.UI.Xaml.Navigation;
 using MinesweeperBeta.Logic;
 using Windows.UI;
 using System.Collections.ObjectModel;
-using System.Security.Cryptography;
 
 namespace MinesweeperBeta
 {
@@ -36,11 +37,13 @@ namespace MinesweeperBeta
         /// <summary>
         /// Timer to tick every millisecond.
         /// </summary>
-        private DispatcherTimer Timer = new DispatcherTimer();
+        private readonly DispatcherTimer Timer = new DispatcherTimer();
         /// <summary>
         /// DateTime of the start of the current game.
         /// </summary>
         private DateTime gameStartTime;
+
+        private readonly SettingsService settings = new SettingsService();
 
         /// <summary>
         /// Matrix of cells represented by buttons on the field.
@@ -50,10 +53,11 @@ namespace MinesweeperBeta
         /// Underlying logic of the game using <see cref="GameGrid"/>.
         /// </summary>
         private GameGrid game;
+
         /// <summary>
         /// Complexity options available to the user.
         /// </summary>
-        ObservableCollection<GameComplexity> complexityOptions = new ObservableCollection<GameComplexity>();
+        private readonly ObservableCollection<GameComplexity> complexityOptions = new ObservableCollection<GameComplexity>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainPage"/> class.
@@ -66,7 +70,9 @@ namespace MinesweeperBeta
 
             InitialiseComplexityOptions();
             RestorePlayingField();
-            
+            ReevalBestTimes();
+
+
             Timer.Tick += Timer_Tick;
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
             gameStartTime = DateTime.Now;
@@ -74,6 +80,9 @@ namespace MinesweeperBeta
 
         }
 
+        /// <summary>
+        /// TODO: Move into Models or Repository
+        /// </summary>
         private void InitialiseComplexityOptions()
         {
             const int defaultComplexity = 1;
@@ -83,33 +92,62 @@ namespace MinesweeperBeta
                 Rows = 10,
                 Columns = 10,
                 Bombs = 5,
-                ComplexityName = "Easy"
+                ComplexityName = "Easy",
+                Complexity = GameComplexityEnum.Easy
             });
             complexityOptions.Add(new GameComplexity
             {
                 Rows = 13,
                 Columns = 13,
                 Bombs = 20,
-                ComplexityName = "Moderate"
+                ComplexityName = "Moderate",
+                Complexity = GameComplexityEnum.Moderate
             });
             complexityOptions.Add(new GameComplexity
             {
                 Rows = 15,
                 Columns = 15,
                 Bombs = 40,
-                ComplexityName = "Hard"
+                ComplexityName = "Hard",
+                Complexity = GameComplexityEnum.Hard
             });
             complexityOptions.Add(new GameComplexity
             {
                 Rows = 15,
                 Columns = 15,
                 Bombs = 60,
-                ComplexityName = "Pro"
+                ComplexityName = "Pro",
+                Complexity = GameComplexityEnum.Pro
             });
 
             prevGameComplexity = complexityOptions[defaultComplexity];
             game = new GameGrid(prevGameComplexity.Rows, prevGameComplexity.Columns, prevGameComplexity.Bombs);
             NewGameCmplx_Combo.SelectedIndex = defaultComplexity;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private string TimeToString(double? time)
+        {
+            return time.HasValue ? String.Format("{0:#,0.00}", time.Value) : "N/A";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ReevalBestTimes()
+        {
+            BestTime_Easy_TextBlock.Text =
+                TimeToString(settings.GetBestTime(GameComplexityEnum.Easy));
+            BestTime_Mod_TextBlock.Text =
+                TimeToString(settings.GetBestTime(GameComplexityEnum.Moderate));
+            BestTime_Hard_TextBlock.Text =
+                TimeToString(settings.GetBestTime(GameComplexityEnum.Hard));
+            BestTime_Pro_TextBlock.Text =
+                TimeToString(settings.GetBestTime(GameComplexityEnum.Pro));
         }
 
         /// <summary>
@@ -139,6 +177,7 @@ namespace MinesweeperBeta
         private void StartNewGame()
         {
             var gameComplexityChanged = ReevalGameComplexity();
+
             firstMove = true;
             if (!gameComplexityChanged)
             {
@@ -185,11 +224,11 @@ namespace MinesweeperBeta
             {
                 for (int j = 0; j < game.Columns; j++)
                 {
-                    //Each button uses ButtonRevealStyle, has margin 4 all
+                    //Each button uses ButtonRevealStyle, has margin 2 all
                     //around and stretches to fill the grid spot it is in
                     CellButton button = new CellButton
                     {
-                        Margin = new Thickness(4.0),
+                        Margin = new Thickness(2.0),
                         HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
                         VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,
                     };
@@ -385,14 +424,21 @@ namespace MinesweeperBeta
         {
             if (game.Success())
             {
+                double gameDuration = (DateTime.Now - gameStartTime).TotalSeconds;
                 Timer.Stop();
+
+                var newFastest = settings.UpdateTime(prevGameComplexity.Complexity, gameDuration);
+
                 var wonDialog = new ContentDialog
                 {
-                    Title = "Game Won",
+                    Title = newFastest ? $"New High Score: {gameDuration}" : "Game Won",
                     Content = "You've successfully avoided all bombs",
                     PrimaryButtonText = "Restart",
                     SecondaryButtonText = "Close"
                 };
+
+                if (newFastest) ReevalBestTimes();
+
                 var dialogReturn = await wonDialog.ShowAsync();
                 switch (dialogReturn)
                 {
@@ -420,9 +466,11 @@ namespace MinesweeperBeta
             public int Columns;
             public int Bombs;
             public string ComplexityName;
+            public GameComplexityEnum Complexity;
+
             public override string ToString()
             {
-                return String.Format("{0}: {1} x {2} ({3} Bombs", ComplexityName, Rows, Columns, Bombs);
+                return String.Format("{0}: {1} x {2} ({3} Bombs)", ComplexityName, Rows, Columns, Bombs);
             }
         }
     }

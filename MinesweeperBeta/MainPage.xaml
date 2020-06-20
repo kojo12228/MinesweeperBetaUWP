@@ -19,6 +19,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -46,7 +47,8 @@
             <Grid Grid.Row="2" Margin="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Grid>
@@ -55,28 +57,62 @@
                         <RowDefinition />
                     </Grid.RowDefinitions>
                     <TextBlock Name="Bombs_TextBlock"
-                           Style="{StaticResource BaseTextBlockStyle}"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
+                               Style="{StaticResource BaseTextBlockStyle}"
+                               TextAlignment="Center" VerticalAlignment="Center"/>
                     <TextBlock Name="Flags_TextBlock"
-                           Style="{StaticResource BaseTextBlockStyle}"
-                           Grid.Row="1"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
+                               Style="{StaticResource BaseTextBlockStyle}"
+                               Grid.Row="1"
+                               TextAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
                 <TextBlock Name="Time" Grid.Column="1"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            Style="{StaticResource SubtitleTextBlockStyle}"/>
-                <Grid Grid.Column="2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="2*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Name="NewGame_Button" HorizontalAlignment="Center"
-                            Click="NewGameClick" Content="New Game" />
-                    <ComboBox Name="NewGameCmplx_Combo" Grid.Column="1"
-                              VerticalAlignment="Center" HorizontalAlignment="Center"
+                <Button Name="NewGame_Button" HorizontalAlignment="Stretch"
+                        Click="NewGameClick" Content="New Game"  Grid.Column="2"
+                        Margin="8"/>
+                <ComboBox Name="NewGameCmplx_Combo" Grid.Column="3" Margin="8"
+                              VerticalAlignment="Center" HorizontalAlignment="Stretch"
                               ItemsSource="{x:Bind complexityOptions}">
-                    </ComboBox>
-                </Grid>
+                </ComboBox>
+            </Grid>
+
+            <Grid Grid.Row="3" Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Easy Best Time"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Moderate Best Time"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="Hard Best Time"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="3" Text="Pro Best Time"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+
+                <TextBlock Name="BestTime_Easy_TextBlock"
+                           Grid.Row="1" Grid.Column="0"
+                           Style="{StaticResource BaseTextBlockStyle}"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Name="BestTime_Mod_TextBlock"
+                           Grid.Row="1" Grid.Column="1"
+                           Style="{StaticResource BaseTextBlockStyle}"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Name="BestTime_Hard_TextBlock"
+                           Grid.Row="1" Grid.Column="2"
+                           Style="{StaticResource BaseTextBlockStyle}"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Name="BestTime_Pro_TextBlock"
+                           Grid.Row="1" Grid.Column="3"
+                           Style="{StaticResource BaseTextBlockStyle}"
+                           TextAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </Grid>
     </Grid>
