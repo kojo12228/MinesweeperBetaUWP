@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MinesweeperBeta.Logic
+namespace MinesweeperBeta.Services
 {
-    class GameGrid
+    class GameGridService
     {
         public int BombQuantity { get; private set; }
         public int VisitedCells { get; private set; }
@@ -33,7 +33,7 @@ namespace MinesweeperBeta.Logic
         public int[,] VisitedPoints { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GameGrid"/> class.
+        /// Initializes a new instance of the <see cref="GameGridService"/> class.
         /// </summary>
         /// <param name="rows">
         /// Number of rows in game.
@@ -44,7 +44,7 @@ namespace MinesweeperBeta.Logic
         /// <param name="bombQuantity">
         /// Number of bombs generated in game.
         /// </param>
-        public GameGrid(int rows, int columns, int bombQuantity)
+        public GameGridService(int rows, int columns, int bombQuantity)
         {
             this.BombQuantity = bombQuantity;
             this.FlagsAvailable = bombQuantity;
@@ -54,7 +54,6 @@ namespace MinesweeperBeta.Logic
             //Cannot proceed if there are meant to be more bombs than cells
             if (bombQuantity > (Columns * Rows)) throw new Exception();
 
-            //StartNewGame();
             ResetBoard();
         }
 
@@ -75,9 +74,9 @@ namespace MinesweeperBeta.Logic
         /// the initial selection will never be a bomb. Reveal
         /// neighbouring tiles as usual.
         /// </summary>
-        /// <param name="initX">First visit X position.</param>
-        /// <param name="initY">First visit Y position.</param>
-        public void GenerateBombs(int initX, int initY)
+        /// <param name="initRow">First visit row position.</param>
+        /// <param name="initCol">First visit column position.</param>
+        public void GenerateBombs(int initRow, int initCol)
         {
             Random bombRandom = new Random();
 
@@ -89,8 +88,8 @@ namespace MinesweeperBeta.Logic
 
                 //Proposed bomb cannot be the X and Y coordinate of first click.
                 var notPositionOfFirstClick =
-                    !(proposedBombLocation / Rows == initX &&
-                      proposedBombLocation % Rows == initY);
+                    !(proposedBombLocation / Rows == initRow &&
+                      proposedBombLocation % Rows == initCol);
 
                 if (notYetAddedBomb && notPositionOfFirstClick)
                 {
@@ -111,21 +110,22 @@ namespace MinesweeperBeta.Logic
                     {
                         int positionX = bombX + x - 1;
                         int positionY = bombY + y - 1;
+
                         //Values must be in grid range (0 or gridWidth/Height cause issues)
+                        //For all cells adjacent to a bomb that are not bombs,
+                        //add one to the value of bombs that cell is adjacent to
                         if (positionX <= Rows - 1 &&
                             positionY <= Columns - 1 &&
-                            positionX >= 0 && positionY >= 0)
+                            positionX >= 0 && positionY >= 0 &&
+                            BombsAndValues[positionX, positionY] > -1)
                         {
-                            //For all cells adjacent to a bomb that are not bombs,
-                            //add one to the value of bombs that cell is adjacent to
-                            if (BombsAndValues[positionX, positionY] > -1)
-                                BombsAndValues[positionX, positionY] += 1;
+                            BombsAndValues[positionX, positionY] += 1;
                         }
                     }
                 }
             }
 
-            VisitNearbyPoints(initX, initY);
+            VisitNearbyPoints(initRow, initCol);
         }
 
         /// <summary>
@@ -234,11 +234,11 @@ namespace MinesweeperBeta.Logic
         /// </summary>
         public void RevealBombs()
         {
-            for (int x = 0; x < Rows; x++)
+            for (int row = 0; row < Rows; row++)
             {
-                for (int y = 0; y < Columns; y++)
+                for (int col = 0; col < Columns; col++)
                 {
-                    if (BombsAndValues[x, y] == -1) VisitedPoints[x, y] = 1;
+                    if (BombsAndValues[row, col] == -1) VisitedPoints[row, col] = 1;
                 }
             }
         }

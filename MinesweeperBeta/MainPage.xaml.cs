@@ -14,7 +14,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using MinesweeperBeta.Logic;
+using MinesweeperBeta.Services;
 using Windows.UI;
 using System.Collections.ObjectModel;
 
@@ -25,7 +25,7 @@ namespace MinesweeperBeta
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private GameComplexity prevGameComplexity;
+        private GameDifficultyDefinition prevGameComplexity;
         /// <summary>
         /// Whether the player has yet to visit a cell in a game.
         /// </summary>
@@ -43,6 +43,9 @@ namespace MinesweeperBeta
         /// </summary>
         private DateTime gameStartTime;
 
+        /// <summary>
+        /// Service for setting high scores of different game difficulties.
+        /// </summary>
         private readonly SettingsService settings = new SettingsService();
 
         /// <summary>
@@ -50,14 +53,15 @@ namespace MinesweeperBeta
         /// </summary>
         private Button[,] cells;
         /// <summary>
-        /// Underlying logic of the game using <see cref="GameGrid"/>.
+        /// Underlying logic of the game using <see cref="GameGridService"/>.
         /// </summary>
-        private GameGrid game;
+        private GameGridService game;
 
         /// <summary>
         /// Complexity options available to the user.
         /// </summary>
-        private readonly ObservableCollection<GameComplexity> complexityOptions = new ObservableCollection<GameComplexity>();
+        private readonly ObservableCollection<GameDifficultyDefinition> complexityOptions =
+            new ObservableCollection<GameDifficultyDefinition>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainPage"/> class.
@@ -70,8 +74,7 @@ namespace MinesweeperBeta
 
             InitialiseComplexityOptions();
             RestorePlayingField();
-            ReevalBestTimes();
-
+            HighScorePanel.Refresh();
 
             Timer.Tick += Timer_Tick;
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 1);
@@ -85,69 +88,14 @@ namespace MinesweeperBeta
         /// </summary>
         private void InitialiseComplexityOptions()
         {
-            const int defaultComplexity = 1;
+            int defaultComplexity = GameDifficultyDefinition.DefaultOptionIndex;
 
-            complexityOptions.Add(new GameComplexity
-            {
-                Rows = 10,
-                Columns = 10,
-                Bombs = 5,
-                ComplexityName = "Easy",
-                Complexity = GameComplexityEnum.Easy
-            });
-            complexityOptions.Add(new GameComplexity
-            {
-                Rows = 13,
-                Columns = 13,
-                Bombs = 20,
-                ComplexityName = "Moderate",
-                Complexity = GameComplexityEnum.Moderate
-            });
-            complexityOptions.Add(new GameComplexity
-            {
-                Rows = 15,
-                Columns = 15,
-                Bombs = 40,
-                ComplexityName = "Hard",
-                Complexity = GameComplexityEnum.Hard
-            });
-            complexityOptions.Add(new GameComplexity
-            {
-                Rows = 15,
-                Columns = 15,
-                Bombs = 60,
-                ComplexityName = "Pro",
-                Complexity = GameComplexityEnum.Pro
-            });
+            var difficulties = GameDifficultyDefinition.DifficultyOptions();
+            foreach (var option in difficulties) complexityOptions.Add(option);
 
             prevGameComplexity = complexityOptions[defaultComplexity];
-            game = new GameGrid(prevGameComplexity.Rows, prevGameComplexity.Columns, prevGameComplexity.Bombs);
+            game = new GameGridService(prevGameComplexity.Rows, prevGameComplexity.Columns, prevGameComplexity.Bombs);
             NewGameCmplx_Combo.SelectedIndex = defaultComplexity;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        private string TimeToString(double? time)
-        {
-            return time.HasValue ? String.Format("{0:#,0.00}", time.Value) : "N/A";
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private void ReevalBestTimes()
-        {
-            BestTime_Easy_TextBlock.Text =
-                TimeToString(settings.GetBestTime(GameComplexityEnum.Easy));
-            BestTime_Mod_TextBlock.Text =
-                TimeToString(settings.GetBestTime(GameComplexityEnum.Moderate));
-            BestTime_Hard_TextBlock.Text =
-                TimeToString(settings.GetBestTime(GameComplexityEnum.Hard));
-            BestTime_Pro_TextBlock.Text =
-                TimeToString(settings.GetBestTime(GameComplexityEnum.Pro));
         }
 
         /// <summary>
@@ -159,11 +107,11 @@ namespace MinesweeperBeta
         /// </returns>
         private bool ReevalGameComplexity()
         {
-            var complexity = NewGameCmplx_Combo.SelectedItem as GameComplexity;
+            var complexity = NewGameCmplx_Combo.SelectedItem as GameDifficultyDefinition;
             if (complexity != prevGameComplexity)
             {
                 prevGameComplexity = complexity;
-                game = new GameGrid(complexity.Rows, complexity.Columns, complexity.Bombs);
+                game = new GameGridService(complexity.Rows, complexity.Columns, complexity.Bombs);
                 ClearPlayingField();
                 RestorePlayingField();
                 return true;
@@ -211,39 +159,36 @@ namespace MinesweeperBeta
 
             //Adds one row definition per gameRow and column definition
             //per gameColumn
-            for (int i = 0; i < game.Rows; i++)
+            for (int row = 0; row < game.Rows; row++)
             {
                 PlayingField.RowDefinitions.Add(new RowDefinition());
             }
-            for (int j = 0; j < game.Columns; j++)
+            for (int col = 0; col < game.Columns; col++)
             {
                 PlayingField.ColumnDefinitions.Add(new ColumnDefinition());
             }
 
-            for (int i = 0; i < game.Rows; i++)
+            for (int row = 0; row < game.Rows; row++)
             {
-                for (int j = 0; j < game.Columns; j++)
+                for (int col = 0; col < game.Columns; col++)
                 {
                     //Each button uses ButtonRevealStyle, has margin 2 all
                     //around and stretches to fill the grid spot it is in
-                    CellButton button = new CellButton
+                    CellButton button = new CellButton(row, col)
                     {
                         Margin = new Thickness(2.0),
-                        HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
-                        VerticalAlignment = Windows.UI.Xaml.VerticalAlignment.Stretch,
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Stretch,
                     };
-
-                    button.x = i;
-                    button.y = j;
 
                     button.Click += new RoutedEventHandler(CellClickAsync);
                     button.RightTapped += new RightTappedEventHandler(CellRightTap);
 
                     PlayingField.Children.Add(button);
-                    Grid.SetRow(button, i);
-                    Grid.SetColumn(button, j);
+                    Grid.SetRow(button, row);
+                    Grid.SetColumn(button, col);
 
-                    cells[i, j] = button;
+                    cells[row, col] = button;
                 }
             }
 
@@ -288,7 +233,7 @@ namespace MinesweeperBeta
         private void CellRightTap(Object sender, RightTappedRoutedEventArgs e)
         {
             CellButton b = (CellButton)sender;
-            game.ToggleFlag(b.x, b.y);
+            game.ToggleFlag(b.Row, b.Column);
             UpdateCells();
             UpdateFlagsTextBlock();
             if (!firstMove) CheckIfWon();
@@ -309,7 +254,7 @@ namespace MinesweeperBeta
             CellButton b = (CellButton)sender;
 
             //If cell flagged, do nothing
-            if (game.VisitedPoints[b.x, b.y] == -1) return;
+            if (game.VisitedPoints[b.Row, b.Column] == -1) return;
 
             //If cell not flagged, but no other moves made
             //generate bombs so that the user cannot activate
@@ -317,12 +262,12 @@ namespace MinesweeperBeta
             if (firstMove)
             {
                 firstMove = false;
-                game.GenerateBombs(b.x, b.y);
+                game.GenerateBombs(b.Row, b.Column);
                 UpdateCells();
                 return;
             }
 
-            bool notLost = game.SelectPoint(b.x, b.y);
+            bool notLost = game.SelectPoint(b.Row, b.Column);
 
             var lostDialog = new ContentDialog
             {
@@ -370,12 +315,12 @@ namespace MinesweeperBeta
         /// </summary>
         private void UpdateCells()
         {
-            for (int i = 0; i < game.Rows; i++)
+            for (int row = 0; row < game.Rows; row++)
             {
-                for (int j = 0; j < game.Columns; j++)
+                for (int col = 0; col < game.Columns; col++)
                 {
-                    int cellVisitState = game.VisitedPoints[i, j];
-                    int cellValue = game.BombsAndValues[i, j];
+                    int cellVisitState = game.VisitedPoints[row, col];
+                    int cellValue = game.BombsAndValues[row, col];
 
                     switch (cellVisitState)
                     {
@@ -384,30 +329,30 @@ namespace MinesweeperBeta
                             {
                                 case -1:
                                     //Bomb emoji
-                                    cells[i, j].Content = "\uD83D\uDCA3";
+                                    cells[row, col].Content = "\uD83D\uDCA3";
                                     break;
                                 case 0:
                                     //No text for 0 value cells
-                                    cells[i, j].Content = "";
+                                    cells[row, col].Content = "";
                                     break;
                                 default:
                                     //Cell value which is at least 1.
-                                    cells[i, j].Content = cellValue;
+                                    cells[row, col].Content = cellValue;
                                     break;
                             }
                             //Disable cells that are visited
-                            cells[i, j].IsEnabled = false;
+                            cells[row, col].IsEnabled = false;
                             break;
                         case 0:
                             //Mathematic asterix
-                            cells[i, j].Content = "\u2217";
-                            cells[i, j].IsEnabled = true;
-                            cells[i, j].BorderBrush = new RevealBackgroundBrush();
+                            cells[row, col].Content = "\u2217";
+                            cells[row, col].IsEnabled = true;
+                            cells[row, col].BorderBrush = new RevealBackgroundBrush();
                             break;
                         case -1:
                             //Flag symbol
-                            cells[i, j].Content = "\u2691";
-                            cells[i, j].BorderBrush = new RevealBackgroundBrush
+                            cells[row, col].Content = "\u2691";
+                            cells[row, col].BorderBrush = new RevealBackgroundBrush
                             {
                                 Color = Color.FromArgb(255, 255, 255, 0)
                             };
@@ -437,7 +382,7 @@ namespace MinesweeperBeta
                     SecondaryButtonText = "Close"
                 };
 
-                if (newFastest) ReevalBestTimes();
+                if (newFastest) HighScorePanel.Refresh();
 
                 var dialogReturn = await wonDialog.ShowAsync();
                 switch (dialogReturn)
@@ -448,29 +393,6 @@ namespace MinesweeperBeta
                     case ContentDialogResult.Secondary:
                         break;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Button with reference to its location on grid.
-        /// </summary>
-        private class CellButton : Button
-        {
-            public int x;
-            public int y;
-        }
-
-        private class GameComplexity
-        {
-            public int Rows;
-            public int Columns;
-            public int Bombs;
-            public string ComplexityName;
-            public GameComplexityEnum Complexity;
-
-            public override string ToString()
-            {
-                return String.Format("{0}: {1} x {2} ({3} Bombs)", ComplexityName, Rows, Columns, Bombs);
             }
         }
     }

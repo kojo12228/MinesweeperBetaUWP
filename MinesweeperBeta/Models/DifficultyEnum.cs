@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MinesweeperBeta.Models
 {
-    enum GameComplexityEnum
+    enum DifficultyEnum
     {
         Easy,
         Moderate, 

@@ -76,44 +76,7 @@
                 </ComboBox>
             </Grid>
 
-            <Grid Grid.Row="3" Margin="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Column="0" Text="Easy Best Time"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="1" Text="Moderate Best Time"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="2" Text="Hard Best Time"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="3" Text="Pro Best Time"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-
-                <TextBlock Name="BestTime_Easy_TextBlock"
-                           Grid.Row="1" Grid.Column="0"
-                           Style="{StaticResource BaseTextBlockStyle}"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock Name="BestTime_Mod_TextBlock"
-                           Grid.Row="1" Grid.Column="1"
-                           Style="{StaticResource BaseTextBlockStyle}"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock Name="BestTime_Hard_TextBlock"
-                           Grid.Row="1" Grid.Column="2"
-                           Style="{StaticResource BaseTextBlockStyle}"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock Name="BestTime_Pro_TextBlock"
-                           Grid.Row="1" Grid.Column="3"
-                           Style="{StaticResource BaseTextBlockStyle}"
-                           TextAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+            <local:HighestScorePanel x:Name="HighScorePanel" Grid.Row="3" Margin="16" />
         </Grid>
     </Grid>
 </Page>

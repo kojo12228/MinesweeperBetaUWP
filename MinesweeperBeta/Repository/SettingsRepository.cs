@@ -13,22 +13,22 @@ namespace MinesweeperBeta.Repository
     {
         private readonly ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
 
-        private readonly Dictionary<GameComplexityEnum, string> complexityKeys = new Dictionary<GameComplexityEnum, string>()
+        private readonly Dictionary<DifficultyEnum, string> complexityKeys = new Dictionary<DifficultyEnum, string>()
         {
-            [GameComplexityEnum.Easy] = "easyBestTime",
-            [GameComplexityEnum.Moderate] = "modBestTime",
-            [GameComplexityEnum.Hard] = "hardBestTime",
-            [GameComplexityEnum.Pro] = "proBestTime"
+            [DifficultyEnum.Easy] = "easyBestTime",
+            [DifficultyEnum.Moderate] = "modBestTime",
+            [DifficultyEnum.Hard] = "hardBestTime",
+            [DifficultyEnum.Pro] = "proBestTime"
         };
         
-        public double? GetTime(GameComplexityEnum complexity)
+        public double? GetTime(DifficultyEnum difficulty)
         {
-            return localSettings.Values[complexityKeys[complexity]] as double?;
+            return localSettings.Values[complexityKeys[difficulty]] as double?;
         }
 
-        public void SetTime(GameComplexityEnum complexity, double time)
+        public void SetTime(DifficultyEnum difficulty, double time)
         {
-            localSettings.Values[complexityKeys[complexity]] = time;
+            localSettings.Values[complexityKeys[difficulty]] = time;
         }
     }
 }
